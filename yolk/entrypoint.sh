@@ -77,9 +77,10 @@ trap cleanup SIGTERM SIGINT
 echo "[LCDactyl] Starting Minecraft Legacy Console Edition..."
 cd /home/container
 
-# No pipe — WINEDEBUG=-all already suppresses all Wine noise at source.
-# Running in background so the trap above can catch SIGTERM.
-wine Minecraft.Client.exe -server ${EXTRA_FLAGS} &
+# -port MUST be passed on the CLI: g_Win64DedicatedServerPort defaults to 25565
+# and takes precedence over server.properties if > 0, so server.properties is
+# never read for the port. Same logic applies to bind IP via -ip.
+wine Minecraft.Client.exe -server -port ${SERVER_PORT:-25565} -ip 0.0.0.0 ${EXTRA_FLAGS} &
 WINE_PID=$!
 
 wait $WINE_PID
