@@ -80,7 +80,8 @@ RUN Xvfb :99 -screen 0 1024x768x16 -nolisten tcp & echo $! > /tmp/xvfb.pid && \
         winetricks -q vcrun2022 && \
         wineserver --wait \
     " && \
-    kill $(cat /tmp/xvfb.pid) 2>/dev/null || true
+    kill $(cat /tmp/xvfb.pid) 2>/dev/null || true && \
+    chown -R container:container /opt/wine-prefix
 
 # ── Entrypoint script ────────────────────────────────────────────────────────
 COPY --chown=root:root entrypoint.sh /entrypoint.sh
