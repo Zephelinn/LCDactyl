@@ -86,12 +86,6 @@ pvp=true
 
 ---
 
-## File Manager
-
-`.dll`, `.exe`, `.pdb` and other binary files are hidden from the panel file manager via `file_denylist`. You'll only see `server.properties`, your world save directory, and any other data files.
-
----
-
 ## Credits
 
 - [smartcmd/MinecraftConsoles](https://github.com/smartcmd/MinecraftConsoles) — the actual server implementation
