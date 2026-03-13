@@ -36,8 +36,10 @@ Xvfb :99 -screen 0 1024x768x16 -nolisten tcp 2>/dev/null &
 sleep 1
 
 # ── Write server.properties ───────────────────────────────────────────────────
-# Always bind to 0.0.0.0 so the server accepts connections on all interfaces.
-# SERVER_PORT comes from the Pterodactyl allocation.
+# SERVER_PORT is injected by Pterodactyl Wings from the server's allocation.
+# -port on the CLI is also required: g_Win64DedicatedServerPort defaults to 25565
+# and takes precedence over server.properties when > 0, so without -port the
+# server always binds 25565 regardless of what's in server.properties.
 cat > /home/container/server.properties << EOF
 server-ip=0.0.0.0
 server-port=${SERVER_PORT:-25565}
@@ -77,15 +79,8 @@ trap cleanup SIGTERM SIGINT
 echo "[LCDactyl] Starting Minecraft Legacy Console Edition..."
 cd /home/container
 
-# -port MUST be passed on the CLI: g_Win64DedicatedServerPort defaults to 25565
-# and takes precedence over server.properties if > 0, so server.properties is
-# never read for the port. Same logic applies to bind IP via -ip.
 wine Minecraft.Client.exe -server -port ${SERVER_PORT:-25565} -ip 0.0.0.0 ${EXTRA_FLAGS} &
 WINE_PID=$!
-
-# After 30s the server should be ready — log what port is actually bound so we
-# can verify the port fix worked and catch any bind failures.
-(sleep 30 && echo "[LCDactyl] Port check (ss):" && ss -tlnp 2>/dev/null | grep -E "LISTEN|${SERVER_PORT:-25565}" || true) &
 
 wait $WINE_PID
 EXIT_CODE=$?
