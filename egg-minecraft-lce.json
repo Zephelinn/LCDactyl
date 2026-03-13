@@ -28,7 +28,7 @@
     ],
     "startup": "/entrypoint.sh",
     "config": {
-        "files": "{\"server.properties\": {\"parser\": \"properties\", \"find\": {\"server-ip\": \"{{server.build.default.ip}}\", \"server-port\": \"{{server.build.default.port}}\", \"max-players\": \"{{server.build.env.LCE_MAX_PLAYERS}}\", \"difficulty\": \"{{server.build.env.LCE_DIFFICULTY}}\", \"gamemode\": \"{{server.build.env.LCE_GAMEMODE}}\", \"pvp\": \"{{server.build.env.LCE_PVP}}\"}}}",
+        "files": "{\"server.properties\": {\"parser\": \"properties\", \"find\": {\"server-port\": \"{{server.build.default.port}}\", \"max-players\": \"{{server.build.env.LCE_MAX_PLAYERS}}\", \"difficulty\": \"{{server.build.env.LCE_DIFFICULTY}}\", \"gamemode\": \"{{server.build.env.LCE_GAMEMODE}}\", \"pvp\": \"{{server.build.env.LCE_PVP}}\"}}}",
         "startup": "{\"done\": [\"Server started\", \"Listening on\"]}",
         "logs": "{}",
         "stop": "^C"
