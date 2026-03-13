@@ -2,7 +2,9 @@
 # LCDactyl entrypoint — runs inside the Pterodactyl container.
 # Pterodactyl automatically injects: SERVER_IP, SERVER_PORT, etc.
 
-export WINEPREFIX=/home/container/.wine
+# Wine prefix lives in /opt/wine-prefix (baked into the image) so Pterodactyl's
+# volume mount over /home/container doesn't wipe it on every start.
+export WINEPREFIX=/opt/wine-prefix
 export WINEARCH=win64
 export DISPLAY=:99
 

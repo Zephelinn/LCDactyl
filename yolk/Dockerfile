@@ -51,24 +51,28 @@ RUN wget -q -O /usr/local/bin/winetricks \
 RUN useradd -m -d /home/container -s /bin/bash container
 
 # ── Bake Wine prefix + vcrun2022 into the image ───────────────────────────────
-# Run as the container user so the prefix lands in /home/container/.wine
-ENV WINEPREFIX=/home/container/.wine \
+# IMPORTANT: prefix lives in /opt/wine-prefix, NOT /home/container, because
+# Pterodactyl mounts the server volume over /home/container on every start,
+# which would wipe a prefix stored there.
+ENV WINEPREFIX=/opt/wine-prefix \
     WINEARCH=win64 \
     DISPLAY=:99 \
     WINEDEBUG=-all \
     DXVK_LOG_LEVEL=none
 
+RUN mkdir -p /opt/wine-prefix && chown container:container /opt/wine-prefix
+
 RUN Xvfb :99 -screen 0 1024x768x16 -nolisten tcp & \
     sleep 2 && \
     su container -c " \
-        WINEPREFIX=/home/container/.wine \
+        WINEPREFIX=/opt/wine-prefix \
         WINEARCH=win64 \
         DISPLAY=:99 \
         WINEDEBUG=-all \
         WINEDLLOVERRIDES='mscoree,mshtml=' \
         wineboot --init && \
         wineserver --wait && \
-        WINEPREFIX=/home/container/.wine \
+        WINEPREFIX=/opt/wine-prefix \
         WINEARCH=win64 \
         DISPLAY=:99 \
         WINEDEBUG=-all \
