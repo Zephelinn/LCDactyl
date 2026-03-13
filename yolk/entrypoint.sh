@@ -6,7 +6,7 @@ export WINEPREFIX=/home/container/.wine
 export WINEARCH=win64
 export DISPLAY=:99
 
-# Suppress all Wine/DXVK/VKD3D noise at source — no pipe needed
+# Suppress Wine internals noise.
 export WINEDEBUG=-all
 export DXVK_LOG_LEVEL=none
 export VKD3D_DEBUG=none
@@ -82,6 +82,10 @@ cd /home/container
 # never read for the port. Same logic applies to bind IP via -ip.
 wine Minecraft.Client.exe -server -port ${SERVER_PORT:-25565} -ip 0.0.0.0 ${EXTRA_FLAGS} &
 WINE_PID=$!
+
+# After 30s the server should be ready — log what port is actually bound so we
+# can verify the port fix worked and catch any bind failures.
+(sleep 30 && echo "[LCDactyl] Port check (ss):" && ss -tlnp 2>/dev/null | grep -E "LISTEN|${SERVER_PORT:-25565}" || true) &
 
 wait $WINE_PID
 EXIT_CODE=$?
