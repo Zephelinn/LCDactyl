@@ -30,6 +30,7 @@ RUN dpkg --add-architecture i386 \
         fontconfig \
         libfontconfig1 \
         cabextract \
+        procps \
  && rm -rf /var/lib/apt/lists/*
 
 # ── Wine stable (WineHQ) ─────────────────────────────────────────────────────
@@ -62,7 +63,7 @@ ENV WINEPREFIX=/opt/wine-prefix \
 
 RUN mkdir -p /opt/wine-prefix && chown container:container /opt/wine-prefix
 
-RUN Xvfb :99 -screen 0 1024x768x16 -nolisten tcp & \
+RUN Xvfb :99 -screen 0 1024x768x16 -nolisten tcp & echo $! > /tmp/xvfb.pid && \
     sleep 2 && \
     su container -c " \
         WINEPREFIX=/opt/wine-prefix \
@@ -79,7 +80,7 @@ RUN Xvfb :99 -screen 0 1024x768x16 -nolisten tcp & \
         winetricks -q vcrun2022 && \
         wineserver --wait \
     " && \
-    pkill Xvfb || true
+    kill $(cat /tmp/xvfb.pid) 2>/dev/null || true
 
 # ── Entrypoint script ────────────────────────────────────────────────────────
 COPY --chown=root:root entrypoint.sh /entrypoint.sh
