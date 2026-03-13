@@ -1,0 +1,105 @@
+{
+    "_comment": "DO NOT EDIT: FILE GENERATED AUTOMATICALLY BY PTERODACTYL PANEL - PTERODACTYL.IO",
+    "meta": {
+        "version": "PTDL_v2",
+        "update_url": null
+    },
+    "exported_at": "2026-03-12T17:50:45+00:00",
+    "name": "Minecraft Legacy Console Edition",
+    "author": "lcdactyl@zephelinn.github.com",
+    "description": "Minecraft Legacy Console Edition (TU19/v1.6.0560.0) server running via Wine. Uses the MinecraftConsoles project (https://github.com/smartcmd/MinecraftConsoles) with the -server flag for headless dedicated server support.",
+    "features": [
+        "pid_limit"
+    ],
+    "docker_images": {
+        "Wine (LCDactyl)": "ghcr.io/zephelinn/lcdactyl:latest"
+    },
+    "file_denylist": [
+        "*.dll",
+        "*.exe",
+        "*.pdb",
+        "*.lib",
+        "*.exp",
+        "*.mui",
+        "*.nls",
+        "*.cat",
+        "*.manifest",
+        "*.spa"
+    ],
+    "startup": "/entrypoint.sh",
+    "config": {
+        "files": "{\"server.properties\": {\"parser\": \"properties\", \"find\": {\"server-ip\": \"{{server.build.default.ip}}\", \"server-port\": \"{{server.build.default.port}}\", \"max-players\": \"{{server.build.env.LCE_MAX_PLAYERS}}\", \"difficulty\": \"{{server.build.env.LCE_DIFFICULTY}}\", \"gamemode\": \"{{server.build.env.LCE_GAMEMODE}}\", \"pvp\": \"{{server.build.env.LCE_PVP}}\"}}}",
+        "startup": "{\"done\": [\"Server started\", \"Listening on\"]}",
+        "logs": "{}",
+        "stop": "^C"
+    },
+    "scripts": {
+        "installation": {
+            "script": "#!/bin/bash\r\nmkdir -p /mnt/server\r\ncd /mnt/server\r\napt-get install -y curl jq unzip\r\nRELEASE_TAG=\"${RELEASE_TAG:-nightly}\"\r\nREPO=\"smartcmd/MinecraftConsoles\"\r\necho \"Installing Minecraft Legacy Console Edition Server\"\r\nRELEASE_JSON=$(curl -sSL \"https://api.github.com/repos/${REPO}/releases/tags/${RELEASE_TAG}\")\r\nDOWNLOAD_URL=$(echo \"${RELEASE_JSON}\" | jq -r '.assets[] | select(.name | endswith(\".zip\")) | .browser_download_url' | head -n 1)\r\nif [ -z \"${DOWNLOAD_URL}\" ] || [ \"${DOWNLOAD_URL}\" = \"null\" ]; then\r\n    echo \"ERROR: Could not find release ${RELEASE_TAG}.\"\r\n    exit 1\r\nfi\r\nZIP_NAME=$(basename \"${DOWNLOAD_URL}\")\r\ncurl -sSLo \"${ZIP_NAME}\" \"${DOWNLOAD_URL}\"\r\nunzip -o \"${ZIP_NAME}\" -d .\r\nrm -f \"${ZIP_NAME}\"\r\nSUBDIR=$(find . -maxdepth 1 -type d ! -name '.' | head -n 1)\r\nif [ -n \"${SUBDIR}\" ] && [ -f \"${SUBDIR}/Minecraft.Client.exe\" ]; then\r\n    mv \"${SUBDIR}\"/* .\r\n    rmdir \"${SUBDIR}\" 2>/dev/null || true\r\nfi\r\nif [ ! -f \"Minecraft.Client.exe\" ]; then\r\n    echo \"ERROR: Minecraft.Client.exe not found.\"\r\n    exit 1\r\nfi\r\nif [ ! -f \"server.properties\" ]; then\r\n    printf 'server-ip=\\nserver-port=25565\\nmax-players=8\\n' > server.properties\r\nfi\r\necho \"Installation complete!\"\r\n",
+            "container": "ghcr.io/pterodactyl/installers:debian",
+            "entrypoint": "bash"
+        }
+    },
+    "variables": [
+        {
+            "name": "PvP",
+            "description": "Enable player vs player combat.",
+            "env_variable": "LCE_PVP",
+            "default_value": "true",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "required|string|in:true,false",
+            "field_type": "text"
+        },
+        {
+            "name": "Gamemode",
+            "description": "Default gamemode: 0=Survival, 1=Creative.",
+            "env_variable": "LCE_GAMEMODE",
+            "default_value": "0",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "required|numeric|min:0|max:1",
+            "field_type": "text"
+        },
+        {
+            "name": "Difficulty",
+            "description": "World difficulty: 0=Peaceful, 1=Easy, 2=Normal, 3=Hard.",
+            "env_variable": "LCE_DIFFICULTY",
+            "default_value": "1",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "required|numeric|min:0|max:3",
+            "field_type": "text"
+        },
+        {
+            "name": "Max Players",
+            "description": "Maximum number of players allowed on the server (1-8).",
+            "env_variable": "LCE_MAX_PLAYERS",
+            "default_value": "8",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "required|numeric|min:1|max:8",
+            "field_type": "text"
+        },
+        {
+            "name": "Extra Launch Flags",
+            "description": "Additional flags passed to Minecraft.Client.exe. Leave blank for none.",
+            "env_variable": "EXTRA_FLAGS",
+            "default_value": "",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "nullable|string",
+            "field_type": "text"
+        },
+        {
+            "name": "Release Tag",
+            "description": "GitHub release tag to download during installation. Use nightly for the latest build.",
+            "env_variable": "RELEASE_TAG",
+            "default_value": "nightly",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "required|string",
+            "field_type": "text"
+        }
+    ]
+}
