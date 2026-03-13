@@ -55,25 +55,26 @@ RUN useradd -m -d /home/container -s /bin/bash container
 # IMPORTANT: prefix lives in /opt/wine-prefix, NOT /home/container, because
 # Pterodactyl mounts the server volume over /home/container on every start,
 # which would wipe a prefix stored there.
-ENV WINEPREFIX=/opt/wine-prefix \
+ENV WINEPREFIX=/home/container/.wine \
     WINEARCH=win64 \
     DISPLAY=:99 \
     WINEDEBUG=-all \
     DXVK_LOG_LEVEL=none
 
-RUN mkdir -p /opt/wine-prefix && chown container:container /opt/wine-prefix
-
+# Build the prefix as the container user into /home/container/.wine,
+# then snapshot it to /opt/wine-template so the entrypoint can restore
+# it after Pterodactyl mounts over /home/container.
 RUN Xvfb :99 -screen 0 1024x768x16 -nolisten tcp & echo $! > /tmp/xvfb.pid && \
     sleep 2 && \
     su container -c " \
-        WINEPREFIX=/opt/wine-prefix \
+        WINEPREFIX=/home/container/.wine \
         WINEARCH=win64 \
         DISPLAY=:99 \
         WINEDEBUG=-all \
         WINEDLLOVERRIDES='mscoree,mshtml=' \
         wineboot --init && \
         wineserver --wait && \
-        WINEPREFIX=/opt/wine-prefix \
+        WINEPREFIX=/home/container/.wine \
         WINEARCH=win64 \
         DISPLAY=:99 \
         WINEDEBUG=-all \
@@ -81,7 +82,7 @@ RUN Xvfb :99 -screen 0 1024x768x16 -nolisten tcp & echo $! > /tmp/xvfb.pid && \
         wineserver --wait \
     " && \
     kill $(cat /tmp/xvfb.pid) 2>/dev/null || true && \
-    chown -R container:container /opt/wine-prefix
+    cp -a /home/container/.wine /opt/wine-template
 
 # ── Entrypoint script ────────────────────────────────────────────────────────
 COPY --chown=root:root entrypoint.sh /entrypoint.sh

@@ -2,9 +2,7 @@
 # LCDactyl entrypoint — runs inside the Pterodactyl container.
 # Pterodactyl automatically injects: SERVER_IP, SERVER_PORT, etc.
 
-# Wine prefix lives in /opt/wine-prefix (baked into the image) so Pterodactyl's
-# volume mount over /home/container doesn't wipe it on every start.
-export WINEPREFIX=/opt/wine-prefix
+export WINEPREFIX=/home/container/.wine
 export WINEARCH=win64
 export DISPLAY=:99
 
@@ -50,6 +48,13 @@ cleanup() {
     exit 0
 }
 trap cleanup SIGTERM SIGINT
+
+# ── Restore Wine prefix if wiped by Pterodactyl volume mount ─────────────────
+if [ ! -f "${WINEPREFIX}/system.reg" ]; then
+    echo "[LCDactyl] Restoring Wine prefix from image template..."
+    cp -a /opt/wine-template /home/container/.wine
+    echo "[LCDactyl] Wine prefix restored."
+fi
 
 # ── Start virtual display ─────────────────────────────────────────────────────
 Xvfb :99 -screen 0 1024x768x16 -nolisten tcp 2>/dev/null &
